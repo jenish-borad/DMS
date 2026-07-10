@@ -1,0 +1,157 @@
+# =========================
+# Dependencies
+# =========================
+node_modules
+bower_components
+jspm_packages
+.pnp
+.pnp.js
+
+# =========================
+# Build / Output
+# =========================
+dist
+build
+out
+lib
+bin
+coverage
+.nyc_output
+.tmp
+.temp
+.cache
+.eslintcache
+.parcel-cache
+.vite
+.vitepress/cache
+
+# =========================
+# Frameworks
+# =========================
+.next
+.nuxt
+.nuxt-dist
+.svelte-kit
+.angular
+storybook-static
+
+# =========================
+# Logs
+# =========================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# Environment & Secrets
+# =========================
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.p12
+*.keystore
+secrets
+config/local.*
+
+# =========================
+# Databases
+# =========================
+data
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.rdb
+
+# =========================
+# IDE / Editors
+# =========================
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.code-workspace
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Testing
+# =========================
+__snapshots__
+__tests__/coverage
+playwright-report
+test-results
+
+# =========================
+# Documentation Builds
+# =========================
+docs/.vuepress/dist
+docs/.docusaurus
+.docusaurus
+mkdocs/site
+
+# =========================
+# Monorepo / Tooling
+# =========================
+packages/*/dist
+packages/*/build
+packages/*/coverage
+turbo
+.nx
+.nx-cache
+.rush
+.rush-temp
+
+# =========================
+# Temporary / Backup
+# =========================
+*.bak
+*.tmp
+*.temp
+*.old
+*.orig
+*.retry
+
+# =========================
+# Docker
+# =========================
+docker-data
+volumes
+
+# =========================
+# Generated Files
+# =========================
+*.min.js
+*.min.css
+*.map
+*.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# =========================
+# Media
+# =========================
+*.mp4
+*.mp3
+*.avi
+*.mov
+*.zip
+*.tar
+*.gz
+*.7z
+*.rar
