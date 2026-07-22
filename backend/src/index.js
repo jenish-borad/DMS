@@ -20,13 +20,12 @@ connectDB()
         // Connect Redis (non-blocking — search works without it)
         await connectRedis();
 
-        app.listen(PORT, "127.0.0.1", () => {
-            // Server bound to 127.0.0.1 (localhost only) — not 0.0.0.0
-            console.log(`\n🚀 DMS Server running at http://127.0.0.1:${PORT}`);
-            console.log(`   Health: http://127.0.0.1:${PORT}/api/v1/health`);
-            console.log(`   Auth:   http://127.0.0.1:${PORT}/api/v1/auth`);
-            console.log(`   Docs:   http://127.0.0.1:${PORT}/api/v1/documents`);
-            console.log(`   Search: http://127.0.0.1:${PORT}/api/v1/search\n`);
+        app.listen(PORT, "0.0.0.0", () => {
+            console.log(`\n🚀 DMS Server running on port ${PORT}`);
+            console.log(`   Health: /api/v1/health`);
+            console.log(`   Auth:   /api/v1/auth`);
+            console.log(`   Docs:   /api/v1/documents`);
+            console.log(`   Search: /api/v1/search\n`);
         });
 
         app.on("error", (error) => {
