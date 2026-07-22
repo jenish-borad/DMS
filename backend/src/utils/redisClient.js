@@ -12,22 +12,13 @@ let isConnected = false;
 
 export async function connectRedis() {
     try {
-        const redisHost = process.env.REDIS_HOST || "127.0.0.1";
-        const redisPort = parseInt(process.env.REDIS_PORT || "6379");
-        const redisUsername = process.env.REDIS_USERNAME || "default";
-        const redisPassword = process.env.REDIS_PASSWORD || "";
-
-        // Use TLS for cloud Redis (redis.io, Upstash, Redis Cloud all require it)
-        const isTLS = redisHost !== "127.0.0.1" && redisHost !== "localhost";
+        // Use REDIS_URL directly (e.g. redis://default:pass@host:port)
+        // Falls back to local Redis in dev if REDIS_URL is not set
+        const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 
         client = createClient({
-            username: redisUsername,
-            password: redisPassword || undefined,
+            url: redisUrl,
             socket: {
-                host: redisHost,
-                port: redisPort,
-                tls: isTLS,
-                rejectUnauthorized: false,
                 reconnectStrategy: (retries) => {
                     if (retries > 5) {
                         console.warn("[Redis] Max reconnect attempts reached — disabling cache");
