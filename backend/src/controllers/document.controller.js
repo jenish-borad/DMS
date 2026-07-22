@@ -9,6 +9,8 @@ import {
     deleteUploadedFile,
     UPLOAD_DIR,
 } from "../utils/fileHandler.js";
+import { invertedIndex } from "../utils/invertedIndex.js";
+import { delCacheByPattern } from "../utils/redisClient.js";
 
 // ---------------------------------------------------------------------------
 // POST /api/v1/documents
@@ -77,6 +79,17 @@ export const createDocument = asyncHandler(async (req, res) => {
         owner: req.user._id,
         isPublic: isPublic === "true" || isPublic === true,
     });
+
+    // ── Update in-process inverted index ──────────────────────────────────
+    invertedIndex.add(document._id, document.title, document.tags, content);
+
+    // ── Invalidate Redis search cache for this user ────────────────────────
+    // Any search the user ran before this upload is now stale.
+    await delCacheByPattern(`${req.user._id}:*`);
+    // If the doc is public, also invalidate other users' caches that might include it
+    if (document.isPublic) {
+        await delCacheByPattern(`*`);
+    }
 
     return res
         .status(201)
@@ -218,6 +231,20 @@ export const updateDocument = asyncHandler(async (req, res) => {
         { new: true, runValidators: true }
     ).select("-fileUrl -storedName");
 
+    // ── Re-index updated document ──────────────────────────────────────────
+    invertedIndex.add(
+        updatedDocument._id,
+        updatedDocument.title,
+        updatedDocument.tags,
+        updates.content !== undefined ? updates.content : (document.content || "")
+    );
+
+    // ── Invalidate cache ───────────────────────────────────────────────────
+    await delCacheByPattern(`${req.user._id}:*`);
+    if (updatedDocument.isPublic || document.isPublic) {
+        await delCacheByPattern(`*`);
+    }
+
     return res
         .status(200)
         .json(new ApiResponse(200, updatedDocument, "Document updated successfully"));
@@ -247,6 +274,15 @@ export const deleteDocument = asyncHandler(async (req, res) => {
     }
 
     await Document.findByIdAndDelete(id);
+
+    // ── Remove from in-process inverted index ─────────────────────────────
+    invertedIndex.remove(id);
+
+    // ── Invalidate cache ──────────────────────────────────────────────────
+    await delCacheByPattern(`${req.user._id}:*`);
+    if (document.isPublic) {
+        await delCacheByPattern(`*`);
+    }
 
     return res
         .status(200)

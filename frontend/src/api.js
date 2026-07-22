@@ -114,14 +114,19 @@ export const api = {
   search: {
     query: (params = {}) => {
       const query = new URLSearchParams();
-      // q is required by backend search
-      if (params.q) query.append('q', params.q);
+      // Normalize q — trim and collapse whitespace so "react  dev " === "react dev"
+      if (params.q) {
+        const normalized = params.q.trim().replace(/\s+/g, ' ');
+        if (normalized) query.append('q', normalized);
+      }
       if (params.tags) query.append('tags', params.tags);
       if (params.dateFrom) query.append('dateFrom', params.dateFrom);
       if (params.dateTo) query.append('dateTo', params.dateTo);
       if (params.page) query.append('page', params.page);
       if (params.limit) query.append('limit', params.limit);
       if (params.myDocs !== undefined) query.append('myDocs', params.myDocs);
+      // matchMode: "whole" (default) | "partial"
+      if (params.matchMode) query.append('matchMode', params.matchMode);
 
       return request(`/search?${query.toString()}`, {
         method: 'GET',

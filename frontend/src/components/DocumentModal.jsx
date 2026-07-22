@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
+import { splitWithHighlights } from '../utils/highlightText';
 
-export default function DocumentModal({ documentId, currentUser, onClose, onUpdateSuccess }) {
+export default function DocumentModal({ documentId, currentUser, onClose, onUpdateSuccess, searchTerms = [], matchMode = 'whole' }) {
   const [doc, setDoc] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -14,6 +15,10 @@ export default function DocumentModal({ documentId, currentUser, onClose, onUpda
   const [isPublic, setIsPublic] = useState(false);
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Search highlight navigation state
+  const [currentHighlight, setCurrentHighlight] = useState(0);
+  const contentRef = useRef(null);
 
   useEffect(() => {
     const fetchDocDetails = async () => {
@@ -268,10 +273,77 @@ export default function DocumentModal({ documentId, currentUser, onClose, onUpda
                   <h4 className="text-[10px] uppercase font-mono tracking-widest text-zinc-500 font-bold mb-2">
                     Extracted Text Layer
                   </h4>
-                  {doc.content ? (
-                    <div className="border border-black p-4 bg-white font-mono text-xs max-h-80 overflow-y-auto whitespace-pre-wrap leading-relaxed">
-                      {/* Secure output text: escaped natively by React JSX bindings */}
-                      {doc.content}
+                {doc.content ? (
+                    <div ref={contentRef}>
+                      {/* Search highlight nav bar — only shown when opened from search */}
+                      {searchTerms.length > 0 && (() => {
+                        const segments = splitWithHighlights(doc.content, searchTerms, matchMode);
+                        const matchCount = segments.filter(s => s.isMatch).length;
+                        return matchCount > 0 ? (
+                          <div className="flex items-center gap-3 mb-2 p-2 bg-yellow-50 border border-yellow-300 font-mono text-[10px] uppercase">
+                            <span className="text-zinc-600">
+                              {matchCount} match{matchCount !== 1 ? 'es' : ''} for &ldquo;{searchTerms.join(' ')}&rdquo;
+                            </span>
+                            <button
+                              onClick={() => {
+                                const prev = Math.max(0, currentHighlight - 1);
+                                setCurrentHighlight(prev);
+                                const el = document.getElementById(`doc-match-${prev}`);
+                                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              }}
+                              disabled={currentHighlight === 0}
+                              className="border border-black px-2 py-0.5 bg-white hover:bg-zinc-100 disabled:opacity-30 cursor-pointer"
+                            >
+                              ← Prev
+                            </button>
+                            <span className="text-zinc-500">{currentHighlight + 1} / {matchCount}</span>
+                            <button
+                              onClick={() => {
+                                const next = Math.min(matchCount - 1, currentHighlight + 1);
+                                setCurrentHighlight(next);
+                                const el = document.getElementById(`doc-match-${next}`);
+                                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              }}
+                              disabled={currentHighlight >= matchCount - 1}
+                              className="border border-black px-2 py-0.5 bg-white hover:bg-zinc-100 disabled:opacity-30 cursor-pointer"
+                            >
+                              Next →
+                            </button>
+                          </div>
+                        ) : null;
+                      })()}
+
+                      {/* Full document content with highlighted terms */}
+                      <div className="border border-black p-4 bg-white font-mono text-xs max-h-80 overflow-y-auto whitespace-pre-wrap leading-relaxed">
+                        {searchTerms.length > 0 ? (() => {
+                          const segments = splitWithHighlights(doc.content, searchTerms, matchMode);
+                          let matchIdx = 0;
+                          return segments.map((seg, i) => {
+                            if (seg.isMatch) {
+                              const idx = matchIdx;
+                              matchIdx++;
+                              const isActive = idx === currentHighlight;
+                              return (
+                                <mark
+                                  key={i}
+                                  id={`doc-match-${idx}`}
+                                  className={`rounded-sm px-0.5 font-semibold transition-colors ${
+                                    isActive
+                                      ? 'bg-yellow-400 text-black ring-1 ring-yellow-600'
+                                      : 'bg-yellow-200 text-black'
+                                  }`}
+                                >
+                                  {seg.text}
+                                </mark>
+                              );
+                            }
+                            return <span key={i}>{seg.text}</span>;
+                          });
+                        })() : (
+                          /* No search terms — plain secure text output */
+                          doc.content
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="border border-dashed border-zinc-300 p-8 text-center text-zinc-400 font-mono text-xs uppercase bg-zinc-50">

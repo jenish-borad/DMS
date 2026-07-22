@@ -1,20 +1,25 @@
 import dotenv from "dotenv";
 
-
-
 dotenv.config({ override: true });
-
 
 import connectDB from "./db/index.js";
 import app from "./app.js";
+import { connectRedis } from "./utils/redisClient.js";
+import { buildIndexFromDB } from "./utils/invertedIndex.js";
 
 const PORT = process.env.PORT || 3000;
 
 // ---------------------------------------------------------------------------
-// Boot sequence: connect to DB, then start HTTP server
+// Boot sequence: connect to DB → warm inverted index → connect Redis → listen
 // ---------------------------------------------------------------------------
 connectDB()
-    .then(() => {
+    .then(async () => {
+        // Warm the in-memory inverted index from existing documents
+        await buildIndexFromDB();
+
+        // Connect Redis (non-blocking — search works without it)
+        await connectRedis();
+
         app.listen(PORT, "127.0.0.1", () => {
             // Server bound to 127.0.0.1 (localhost only) — not 0.0.0.0
             console.log(`\n🚀 DMS Server running at http://127.0.0.1:${PORT}`);
@@ -33,3 +38,4 @@ connectDB()
         console.error("Failed to connect to MongoDB:", error.message);
         process.exit(1);
     });
+

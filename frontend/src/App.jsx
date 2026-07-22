@@ -5,6 +5,7 @@ import Search from './components/Search';
 import DocumentList from './components/DocumentList';
 import UploadModal from './components/UploadModal';
 import DocumentModal from './components/DocumentModal';
+import { clearSearchCache } from './utils/searchCache';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -20,6 +21,10 @@ export default function App() {
   
   // Cache buster for DocumentList updates
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Active search context — passed to DocumentModal for content highlighting
+  const [activeSearchTerms, setActiveSearchTerms] = useState([]);
+  const [activeMatchMode, setActiveMatchMode] = useState('whole');
 
   // In-app Notification Banner state (Blocks native alert/confirm dialogues)
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
@@ -90,11 +95,15 @@ export default function App() {
   const handleUploadSuccess = () => {
     setIsUploadOpen(false);
     setRefreshTrigger(prev => prev + 1);
+    // Invalidate browser search cache — new document must appear in results
+    clearSearchCache();
     showToast('Document ingested and text indices generated successfully.');
   };
 
   const handleRefreshRepository = () => {
     setRefreshTrigger(prev => prev + 1);
+    // Invalidate browser search cache — document edits must reflect in results
+    clearSearchCache();
     showToast('Document parameters updated.');
   };
 
@@ -178,7 +187,14 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 py-4">
         {activeTab === 'search' ? (
-          <Search onSelectDocument={handleOpenDocument} currentUser={user} />
+          <Search
+            onSelectDocument={handleOpenDocument}
+            currentUser={user}
+            onSearchQueryChange={(terms, mode) => {
+              setActiveSearchTerms(terms || []);
+              if (mode) setActiveMatchMode(mode);
+            }}
+          />
         ) : (
           <DocumentList
             onSelectDocument={handleOpenDocument}
@@ -208,6 +224,8 @@ export default function App() {
           currentUser={user}
           onClose={handleCloseDocument}
           onUpdateSuccess={handleRefreshRepository}
+          searchTerms={activeSearchTerms}
+          matchMode={activeMatchMode}
         />
       )}
 
