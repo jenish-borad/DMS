@@ -1,4 +1,6 @@
-const API_BASE = '/api/v1';
+// In dev: VITE_API_BASE_URL is empty → Vite proxy handles /api → localhost:3000
+// In prod: VITE_API_BASE_URL=https://your-backend.onrender.com → direct backend call
+const API_BASE = `${import.meta.env.VITE_API_BASE_URL || ''}/api/v1`;
 
 /**
  * Helper to make API requests with credentials: 'include' (for httpOnly cookies)
