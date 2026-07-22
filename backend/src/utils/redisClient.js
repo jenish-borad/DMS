@@ -27,6 +27,7 @@ export async function connectRedis() {
                 host: redisHost,
                 port: redisPort,
                 tls: isTLS,
+                rejectUnauthorized: false,
                 reconnectStrategy: (retries) => {
                     if (retries > 5) {
                         console.warn("[Redis] Max reconnect attempts reached — disabling cache");
