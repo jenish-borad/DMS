@@ -68,7 +68,6 @@ credentials.json
 # Databases / Storage
 ####################################
 data/
-db/
 *.sqlite
 *.sqlite3
 *.db
